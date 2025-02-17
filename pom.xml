@@ -30,7 +30,7 @@
         </repository>
         <repository>
             <id>papermc</id>
-            <url>https://papermc.io/repo/repository/maven-public/</url>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
         <repository>
             <id>maven_central</id>
@@ -40,6 +40,10 @@
         <repository>
             <id>jitpack</id>
             <url>https://jitpack.io</url>
+        </repository>
+        <repository>
+            <id>rosewood</id>
+            <url>https://repo.rosewooddev.io/repository/public/</url>
         </repository>
     </repositories>
 
@@ -63,7 +67,7 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot</artifactId>
-            <version>1.20.5-R0.1-SNAPSHOT</version>
+            <version>1.20.5</version>
             <optional>true</optional>
             <scope>provided</scope>
         </dependency>
