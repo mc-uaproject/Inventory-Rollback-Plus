@@ -1,5 +1,7 @@
 package com.nuclyon.technicallycoded.inventoryrollback.commands.inventoryrollback;
 
+import com.janboerman.invsee.spigot.api.InvseeAPI;
+import com.janboerman.invsee.spigot.api.InvseePlusPlus;
 import com.nuclyon.technicallycoded.inventoryrollback.InventoryRollbackPlus;
 import com.nuclyon.technicallycoded.inventoryrollback.commands.IRPCommand;
 import me.danjono.inventoryrollback.InventoryRollback;
@@ -14,6 +16,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class RestoreSubCmd extends IRPCommand {
 
@@ -46,7 +49,7 @@ public class RestoreSubCmd extends IRPCommand {
                 openMainMenu(staff);
             } catch (NullPointerException ignored) {}
         } else if(args.length == 2) {
-            OfflinePlayer rollbackPlayer;
+            CompletableFuture<OfflinePlayer> rollbackPlayerFuture;
 
             String uuidStr = args[1];
 
@@ -68,19 +71,28 @@ public class RestoreSubCmd extends IRPCommand {
                 }
 
                 try {
-                    rollbackPlayer = Bukkit.getOfflinePlayer(UUID.fromString(uuidStr));
+                    rollbackPlayerFuture = CompletableFuture.completedFuture(Bukkit.getOfflinePlayer(UUID.fromString(uuidStr)));
                 } catch (IllegalArgumentException e) {
                     sender.sendMessage(MessageData.getPluginPrefix() + MessageData.getError());
                     return;
                 }
             } else {
                 // If not UUID length, assume it's a name
-                rollbackPlayer = Bukkit.getOfflinePlayer(args[1]);
+                final InvseePlusPlus invseePlusPlus = (InvseePlusPlus) Bukkit.getServer().getPluginManager().getPlugin("InvSeePlusPlus");
+                if (invseePlusPlus != null) {
+                    final InvseeAPI invseeApi = invseePlusPlus.getApi();
+                    rollbackPlayerFuture = invseeApi.fetchUniqueId(args[1]).thenApply(uuidOptional -> uuidOptional.map(Bukkit::getOfflinePlayer).orElseGet(() -> Bukkit.getOfflinePlayer(args[1])));
+                } else {
+                    rollbackPlayerFuture = CompletableFuture.completedFuture(Bukkit.getOfflinePlayer(args[1]));
+                }
             }
 
-            try {
-                openPlayerMenu(staff, rollbackPlayer);
-            } catch (NullPointerException e) {}
+            rollbackPlayerFuture.thenApply(rollbackPlayer -> {
+                try {
+                    openPlayerMenu(staff, rollbackPlayer);
+                } catch (NullPointerException e) {}
+                return null;
+            });
         } else {
             sender.sendMessage(MessageData.getPluginPrefix() + MessageData.getError());
         }
